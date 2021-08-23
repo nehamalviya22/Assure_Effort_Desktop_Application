@@ -130,9 +130,8 @@ class ActivityScreen(QDialog):
                 self.startWatch = False
                 print("if is running....")
                 self.tracker_end_time = QTime.currentTime()
-                print(self.tracker_end_time.toString())
 
-                self.save_track_time(self.tracker_start_time.toString(),self.tracker_end_time.toString(),self.row_id)
+                #self.save_track_time(self.tracker_start_time.toString(),self.tracker_end_time.toString(),self.row_id)
                 #print(self.tableWidget.currentRow())
             else:
                 self.startWatch = True
