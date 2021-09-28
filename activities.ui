@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>800</width>
+    <width>817</width>
     <height>599</height>
    </rect>
   </property>
@@ -23,20 +23,19 @@
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">QWidget#bgwidget{
-background-color:qlineargradient(spread:pad, x1:0.105, y1:0.125, x2:0.916, y2:0.931818, stop:0 rgba(170, 255, 255, 255), stop:1 rgba(255, 255, 255, 255));}</string>
+    <string notr="true">background-color: rgb(255, 255, 255);</string>
    </property>
    <widget class="QLabel" name="activities">
     <property name="geometry">
      <rect>
-      <x>260</x>
-      <y>10</y>
-      <width>231</width>
+      <x>300</x>
+      <y>0</y>
+      <width>151</width>
       <height>51</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font: 34pt &quot;Sans Serif&quot;;color:rgb(0, 0, 0)</string>
+     <string notr="true">font: 24pt &quot;Sans Serif&quot;;color:rgb(0, 0, 0)</string>
     </property>
     <property name="text">
      <string>Activities</string>
@@ -54,7 +53,7 @@ background-color:qlineargradient(spread:pad, x1:0.105, y1:0.125, x2:0.916, y2:0.
     <property name="styleSheet">
      <string notr="true">color: rgb(0, 0, 0);
 font: 12pt &quot;Sans Serif&quot;;
-background-color: rgb(149, 197, 255)</string>
+background-color: rgb(97, 191, 132);</string>
     </property>
     <property name="text">
      <string>New</string>
@@ -86,7 +85,7 @@ background-color: rgb(149, 197, 255)</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color: rgb(192, 255, 251);</string>
+     <string notr="true">background-color: rgb(255, 255, 255);</string>
     </property>
    </widget>
    <widget class="QPushButton" name="hours">
@@ -102,7 +101,26 @@ background-color: rgb(149, 197, 255)</string>
      <string notr="true">border-radius:20px;
 color: rgb(0, 0, 0);
 font: 10pt &quot;Sans Serif&quot;;
-background-color: rgb(149, 197, 255)</string>
+background-color: rgb(174, 229, 213);</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="breakHours">
+    <property name="geometry">
+     <rect>
+      <x>240</x>
+      <y>120</y>
+      <width>191</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">border-radius:20px;
+color: rgb(0, 0, 0);
+font: 10pt &quot;Sans Serif&quot;;
+background-color: rgb(244, 164, 162);</string>
     </property>
     <property name="text">
      <string/>

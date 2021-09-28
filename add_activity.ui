@@ -24,7 +24,7 @@
    </property>
    <property name="styleSheet">
     <string notr="true">QWidget#bgwidget{
-background-color:qlineargradient(spread:pad, x1:0.105, y1:0.125, x2:0.916, y2:0.931818, stop:0 rgba(170, 255, 255, 255), stop:1 rgba(255, 255, 255, 255));}</string>
+background-color:qlineargradient(spread:pad, x1:0.105, y1:0.125, x2:0.916, y2:0.931818, stop:0 rgba(255, 255, 255, 255), stop:1 rgba(255, 255, 255, 255));}</string>
    </property>
    <widget class="QLabel" name="label">
     <property name="geometry">
@@ -71,7 +71,7 @@ background-color: rgb(149, 197, 255)</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:rgb(224, 252, 255);
+     <string notr="true">background-color:rgb(255, 255, 255);
 font: 12pt &quot;Sans Serif&quot;;</string>
     </property>
    </widget>
@@ -105,22 +105,6 @@ font: 12pt &quot;Sans Serif&quot;;</string>
     </property>
     <property name="text">
      <string>Task Tiltle</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="error">
-    <property name="geometry">
-     <rect>
-      <x>260</x>
-      <y>376</y>
-      <width>251</width>
-      <height>20</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font: 12pt &quot;Sans Serif&quot;;color:red;</string>
-    </property>
-    <property name="text">
-     <string/>
     </property>
    </widget>
    <widget class="QPushButton" name="save">
@@ -216,7 +200,7 @@ background-color: rgb(149, 197, 255)</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:rgb(224, 252, 255);
+     <string notr="true">background-color:rgb(255, 255, 255);
 font: 12pt &quot;Sans Serif&quot;;</string>
     </property>
    </widget>
@@ -230,7 +214,7 @@ font: 12pt &quot;Sans Serif&quot;;</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:rgb(224, 252, 255);
+     <string notr="true">background-color:rgb(255, 255, 255);
 font: 12pt &quot;Sans Serif&quot;;</string>
     </property>
    </widget>
@@ -244,7 +228,7 @@ font: 12pt &quot;Sans Serif&quot;;</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:rgb(224, 252, 255);
+     <string notr="true">background-color:rgb(255, 255, 255);
 font: 12pt &quot;Sans Serif&quot;;</string>
     </property>
    </widget>
@@ -258,7 +242,7 @@ font: 12pt &quot;Sans Serif&quot;;</string>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">background-color:rgb(224, 252, 255);
+     <string notr="true">background-color:rgb(255, 255, 255);
 font: 12pt &quot;Sans Serif&quot;;</string>
     </property>
    </widget>
@@ -275,7 +259,7 @@ font: 12pt &quot;Sans Serif&quot;;</string>
      <string notr="true">font: 11pt &quot;Sans Serif&quot;;</string>
     </property>
     <property name="text">
-     <string>Task</string>
+     <string>Task </string>
     </property>
    </widget>
    <widget class="QComboBox" name="Addproject">
@@ -296,6 +280,39 @@ font: 12pt &quot;Sans Serif&quot;;</string>
       <width>211</width>
       <height>41</height>
      </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="error">
+    <property name="geometry">
+     <rect>
+      <x>470</x>
+      <y>150</y>
+      <width>101</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Sans Serif&quot;;color:red;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_10">
+    <property name="geometry">
+     <rect>
+      <x>510</x>
+      <y>70</y>
+      <width>20</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 14pt &quot;Sans Serif&quot;;
+color: rgb(255, 21, 0);</string>
+    </property>
+    <property name="text">
+     <string>*</string>
     </property>
    </widget>
   </widget>
