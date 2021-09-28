@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import sqlite3
 import datetime
+from functools import partial
 
 class WelcomeScreen(QDialog):
     def __init__(self):
@@ -61,10 +62,9 @@ class ActivityScreen(QDialog):
         loadUi("activities.ui",self)
         self.New.clicked.connect(self.gotoaddactivity)
         self.row_id = 0
-        self.tracking_time = 0
         self.counter_hour = 0
         self.counter = 0
-        self.hour = '00'
+        self.hour = '0'
         self.minute = '00'
         self.second = '00'
         self.count = '00'
@@ -74,7 +74,7 @@ class ActivityScreen(QDialog):
         self.now = QDate.currentDate()
         self.currentdate = self.now.toString(Qt.DefaultLocaleLongDate)
         self.date.setText(self.currentdate)
-        self.productive_time = "Productive Hours :00:00:00"
+       
         self.showactivity()
         hour = 0
         minute = 0
@@ -87,6 +87,15 @@ class ActivityScreen(QDialog):
             mysum += d
         self.productive_time = str(mysum)
         self.hours.setText("Productive Hours :" + self.productive_time)
+
+        break_hours_sum = datetime.timedelta()
+        for i in self.break_hours:
+            (h, m, s) = i.split(':')
+            d = datetime.timedelta(hours=int(h), minutes=int(m), seconds=int(s))
+            break_hours_sum += d
+        self.break_time = str(break_hours_sum)
+        self.breakHours.setText("Break Hours :" + self.break_time)
+
 
     def showCounter(self):
         
@@ -121,15 +130,15 @@ class ActivityScreen(QDialog):
                                 self.counter = 0
                                 ho = int(self.hour) + 1
                                 if ho < 10 :
-                                    self.hour = '0' + str(ho)
+                                    self.hour = str(ho)
                                 else:
                                     self.hour = str(ho)
 
       
-            text = self.hour + ':' + self.minute + ':' + self.second+ ':' + self.count
+            text = self.hour + ':' + self.minute + ':' + self.second
             self.timer.setText('<h3 style="color:black">' + text + '</h3>')
         
-
+    
     def Start_new(self):
         self.startWatch = True
     
@@ -137,17 +146,26 @@ class ActivityScreen(QDialog):
         self.startWatch = False
         self.tracker_end_time = QTime.currentTime()
         self.save_track_time(self.tracker_end_time.toString(),self.row_id)
-
+        #self.showactivity()
+        activityscreen = ActivityScreen()
+        widget.addWidget(activityscreen)
+        widget.setCurrentIndex(widget.currentIndex()+1)
     
     def save_track_time(self,end_time,id):
         conn = sqlite3.connect("test.db")
         cur = conn.cursor()
-        activity = ( end_time, id)
+        activity = (end_time, id)
         cur.execute('UPDATE activity SET endtime=? WHERE oid=?', activity)
         conn.commit()
         conn.close()
         
-        self.tracking_time = self.timer.text()
+    def Reset(self):
+        self.startWatch = False
+        self.counter = 0
+        self.minute = '00'
+        self.second = '00'
+        self.count = '00'
+        self.timer.setText(str(self.counter))
 
     def gotoaddactivity(self):
         Add_activity = AddActivityScreen()
@@ -160,6 +178,25 @@ class ActivityScreen(QDialog):
         time_interval = time_2 - time_1
         return str(time_interval)
 
+    def add_duplicate_Activity(self,project,task,task_title,task_link,description):
+        date = self.currentdate
+        end_time = ''
+        start_time = QTime.currentTime().toString()
+        conn = sqlite3.connect("test.db")
+        cur = conn.cursor()
+        activity = [project, task, task_title, task_link, description, start_time, end_time, date]
+        cur.execute('INSERT INTO activity (project, task, tasktitle, tasklink, description, starttime, endtime, date) VALUES (?,?,?,?,?,?,?,?)', activity)
+        conn.commit()
+        conn.close()
+        activityscreen = ActivityScreen()
+        widget.addWidget(activityscreen)
+        widget.setCurrentIndex(widget.currentIndex()+1)
+        
+    def Edit(self,row_id):
+        Edit_activity = EditActivityScreen(row_id)
+        widget.addWidget(Edit_activity)
+        widget.setCurrentIndex(widget.currentIndex()+1)
+        
 
     def showactivity(self):
         conn = sqlite3.connect("test.db")
@@ -167,28 +204,28 @@ class ActivityScreen(QDialog):
         queryCurs.execute('SELECT rowid,starttime,endtime,project,task,tasktitle,tasklink,description FROM activity WHERE date =\''+self.currentdate+"\'") 
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.horizontalHeader().setVisible(False)
-        self.tableWidget.setColumnCount(7)
+        self.tableWidget.setColumnCount(8)
         self.tableWidget.setRowCount(0)
-        self.tableWidget.setColumnWidth(0,130)
-        self.tableWidget.setColumnWidth(1,130)
+        self.tableWidget.setColumnWidth(0,80)
+        self.tableWidget.setColumnWidth(1,80)
         self.tableWidget.setColumnWidth(2,100)
-        self.tableWidget.setColumnWidth(4,130)
+        self.tableWidget.setColumnWidth(4,139)
         
         self.productive_hours = []
+        self.break_hours = []
         
         for row, data in enumerate(queryCurs):
             self.timer = QLabel()
-
-            timer = QTimer(self)
-            timer.timeout.connect(self.showCounter)
-            timer.start(100)
-
             self.row_id = data[0]
             self.tableWidget.insertRow(row)
             
             if data[2] == '':
+                timer = QTimer(self)
+                timer.timeout.connect(self.showCounter)
+                timer.start(100)
                 self.Start_new()
                 self.start = QPushButton('Stop')
+                self.start.setStyleSheet("background-color : rgb(97, 179, 255);color: rgb(0, 0, 0);border-radius:20px;")
                 self.start.clicked.connect(self.Stop_new)
             
             else:
@@ -197,14 +234,22 @@ class ActivityScreen(QDialog):
                 queryCurs.execute('SELECT starttime,endtime,project,task,tasktitle,tasklink,description FROM activity WHERE rowid =\''+str(self.row_id)+"\'") 
                 for item in queryCurs:
                     total_time=self.time_diffrence(item[0],item[1])
-                    self.productive_hours.append(total_time)
-                    
+                    if (data[4] == 'Lunch Break' or data[4] == 'Tea Break' or data[4] == 'Other Break'):
+                        self.break_hours.append(total_time)
+                    else:
+                        self.productive_hours.append(total_time)
                     self.timer.setText('<h3 style="color:black">' + total_time + '</h3>')
                     self.start = QPushButton('Start')
-                    self.start.setEnabled(False)
+                    self.start.setStyleSheet("background-color : rgb(97, 179, 255);color: rgb(0, 0, 0);border-radius:20px;")
+                    add_duplicate_activity = partial(self.add_duplicate_Activity,item[2],item[3],item[4],item[5],item[6])
+                    self.start.clicked.connect(add_duplicate_activity)
 
+            self.edit = QPushButton('Edit')
+            edit_id = partial(self.Edit,self.row_id)
+            self.edit.clicked.connect(edit_id)
             self.tableWidget.setCellWidget(row,5, self.timer)
             self.tableWidget.setCellWidget(row,6, self.start)
+            self.tableWidget.setCellWidget(row,7, self.edit)
             
             for column, item in enumerate(data[1:]):  
                 self.tableWidget.setItem(row, column, QTableWidgetItem(str(item))) 
@@ -244,7 +289,7 @@ class AddActivityScreen(QDialog):
 
     def saveactivitytodb(self):
         activityscreen = ActivityScreen()
-        project = self.Addproject.currentText()
+        project_name = self.Addproject.currentText()
         task = self.Addtask.currentText()
         task_title = self.Tasktitlefield.text()
         task_link = self.Tasklinkfield.text()
@@ -252,12 +297,80 @@ class AddActivityScreen(QDialog):
         start_time = self.starttimefield.text()
         end_time = self.endtimefield.text()
         date = activityscreen.currentdate
-        if start_time == '':
-            start_time = QTime.currentTime().toString()
+        if len(task)==0 or task == 'Select Task':
+            self.error.setText("must exist")
+        else:
+            if project_name == 'Select Project':
+                project = project_name.replace('Select Project', 'Other Things')
+            if start_time == '':
+                start_time = QTime.currentTime().toString()
+            conn = sqlite3.connect("test.db")
+            cur = conn.cursor()
+            activity = [project, task, task_title, task_link, description, start_time, end_time, date]
+            cur.execute('INSERT INTO activity (project, task, tasktitle, tasklink, description, starttime, endtime, date) VALUES (?,?,?,?,?,?,?,?)', activity)
+            conn.commit()
+            conn.close()
+            activityscreen = ActivityScreen()
+            widget.addWidget(activityscreen)
+            widget.setCurrentIndex(widget.currentIndex()+1)
+
+class EditActivityScreen(QDialog):
+    def __init__(self,row_id):
+        super(EditActivityScreen, self).__init__()
+        loadUi("edit_activity.ui",self)
+        self.unique_id = row_id
+
+        self.Addproject.addItem("Select Project")
+        self.Addproject.addItem("RDvault")
+        self.Addproject.addItem("Estimator")
+        
+        self.Addtask.addItem("Select Task")
+        self.Addtask.addItem("Coordination")
+        self.Addtask.addItem("Lunch Break")
+        self.Addtask.addItem("Tea Break")
+        self.Addtask.addItem("Other Break")
+        self.Addtask.addItem("Fun Activity")
+        self.Addtask.addItem("Demo Projects")
+        self.Addtask.addItem("Training Topics")
+        self.Addtask.addItem("Client Call")
+        self.Addtask.addItem("R&D Work")
+        self.Addtask.addItem("Outside of office for personal work")
+        self.Addtask.addItem("Learn New Technology")
+        self.Addtask.addItem("Electricity Failure")
+
+        conn = sqlite3.connect("test.db")
+        queryCurs = conn.cursor()
+        
+        queryCurs.execute('SELECT starttime,endtime,project,task,tasktitle,tasklink,description FROM activity WHERE rowid =\''+str(row_id)+"\'") 
+        for item in queryCurs:
+            self.Addproject.setCurrentText(item[2])
+            self.Addtask.setCurrentText(item[3])
+            self.Tasktitlefield.setText(item[4])
+            self.Tasklinkfield.setText(item[5])
+            self.Descriptionfield.setText(item[6])
+
+        self.close.clicked.connect(self.closeactivity)
+        self.save.clicked.connect(self.saveactivitytodb)
+        self.activityscreen = ActivityScreen()
+
+
+    def closeactivity(self):
+        activityscreen = ActivityScreen()
+        widget.addWidget(activityscreen)
+        widget.setCurrentIndex(widget.currentIndex()+1)  
+
+    def saveactivitytodb(self):
+        activityscreen = ActivityScreen()
+        project = self.Addproject.currentText()
+        task = self.Addtask.currentText()
+        task_title = self.Tasktitlefield.text()
+        task_link = self.Tasklinkfield.text()
+        description = self.Descriptionfield.text()
+
         conn = sqlite3.connect("test.db")
         cur = conn.cursor()
-        activity = [project, task, task_title, task_link, description, start_time, end_time, date]
-        cur.execute('INSERT INTO activity (project, task, tasktitle, tasklink, description, starttime, endtime, date) VALUES (?,?,?,?,?,?,?,?)', activity)
+        activity = (project, task, task_title, task_link, description,self.unique_id)
+        cur.execute('UPDATE activity SET project=?, task=?, tasktitle=?, tasklink=?, description=? WHERE oid=?', activity)
         
         conn.commit()
         conn.close()
