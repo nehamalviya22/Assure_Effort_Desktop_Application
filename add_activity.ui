@@ -45,8 +45,8 @@ background-color:qlineargradient(spread:pad, x1:0.105, y1:0.125, x2:0.916, y2:0.
    <widget class="QPushButton" name="close">
     <property name="geometry">
      <rect>
-      <x>590</x>
-      <y>540</y>
+      <x>620</x>
+      <y>550</y>
       <width>71</width>
       <height>41</height>
      </rect>
@@ -110,8 +110,8 @@ font: 12pt &quot;Sans Serif&quot;;</string>
    <widget class="QPushButton" name="save">
     <property name="geometry">
      <rect>
-      <x>670</x>
-      <y>540</y>
+      <x>700</x>
+      <y>550</y>
       <width>71</width>
       <height>41</height>
      </rect>
@@ -197,20 +197,6 @@ background-color: rgb(149, 197, 255)</string>
       <y>270</y>
       <width>581</width>
       <height>41</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">background-color:rgb(255, 255, 255);
-font: 12pt &quot;Sans Serif&quot;;</string>
-    </property>
-   </widget>
-   <widget class="QLineEdit" name="Descriptionfield">
-    <property name="geometry">
-     <rect>
-      <x>160</x>
-      <y>360</y>
-      <width>581</width>
-      <height>81</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -313,6 +299,48 @@ color: rgb(255, 21, 0);</string>
     </property>
     <property name="text">
      <string>*</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="end_time_error">
+    <property name="geometry">
+     <rect>
+      <x>480</x>
+      <y>530</y>
+      <width>261</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Sans Serif&quot;;color:red;</string>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
+   </widget>
+   <widget class="QTextEdit" name="Descriptionfield">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>370</y>
+      <width>581</width>
+      <height>70</height>
+     </rect>
+    </property>
+   </widget>
+   <widget class="QLabel" name="start_time_error">
+    <property name="geometry">
+     <rect>
+      <x>160</x>
+      <y>530</y>
+      <width>261</width>
+      <height>20</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font: 12pt &quot;Sans Serif&quot;;color:red;</string>
+    </property>
+    <property name="text">
+     <string/>
     </property>
    </widget>
   </widget>

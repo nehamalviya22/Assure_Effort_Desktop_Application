@@ -2,12 +2,13 @@ import sys
 from PyQt5.uic import loadUi
 from PyQt5 import QtWidgets,QtGui
 from PyQt5.QtWidgets import QDialog, QApplication, QWidget
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtGui import QPixmap,QRegExpValidator
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import *
 import sqlite3
 import datetime
 from functools import partial
+import re
 
 class WelcomeScreen(QDialog):
     def __init__(self):
@@ -69,6 +70,7 @@ class ActivityScreen(QDialog):
         self.second = '00'
         self.count = '00'
         self.startWatch = False
+        self.activity_on = False
         self.row = 0
  
         self.now = QDate.currentDate()
@@ -140,13 +142,17 @@ class ActivityScreen(QDialog):
         
     
     def Start_new(self):
+        self.activity_on = True
         self.startWatch = True
     
     def Stop_new(self):
         self.startWatch = False
-        self.tracker_end_time = QTime.currentTime()
-        self.save_track_time(self.tracker_end_time.toString(),self.row_id)
+        current_time = QTime.currentTime().toString()
+        converted_current_time = datetime.datetime.strptime(current_time,"%H:%M:%S")
+        self.tracker_end_time = converted_current_time.strftime("%I:%M:%S %p")
+        self.save_track_time(self.tracker_end_time,self.row_id)
         #self.showactivity()
+        self.activity_on = False
         activityscreen = ActivityScreen()
         widget.addWidget(activityscreen)
         widget.setCurrentIndex(widget.currentIndex()+1)
@@ -173,19 +179,21 @@ class ActivityScreen(QDialog):
         widget.setCurrentIndex(widget.currentIndex()+1)
         
     def time_diffrence(self,start,end):
-        time_1 = datetime.datetime.strptime(start,"%H:%M:%S")
-        time_2 = datetime.datetime.strptime(end,"%H:%M:%S")
+        time_1 = datetime.datetime.strptime(start,"%H:%M:%S %p")
+        time_2 = datetime.datetime.strptime(end,"%H:%M:%S %p")
         time_interval = time_2 - time_1
         return str(time_interval)
 
-    def add_duplicate_Activity(self,project,task,task_title,task_link,description):
+    def add_duplicate_Activity(self,project,task,description):
         date = self.currentdate
         end_time = ''
-        start_time = QTime.currentTime().toString()
+        current_time = QTime.currentTime().toString()
+        converted_current_time = datetime.datetime.strptime(current_time,"%H:%M:%S")
+        start_time = converted_current_time.strftime("%I:%M:%S %p")
         conn = sqlite3.connect("test.db")
         cur = conn.cursor()
-        activity = [project, task, task_title, task_link, description, start_time, end_time, date]
-        cur.execute('INSERT INTO activity (project, task, tasktitle, tasklink, description, starttime, endtime, date) VALUES (?,?,?,?,?,?,?,?)', activity)
+        activity = [project, task, description, start_time, end_time, date]
+        cur.execute('INSERT INTO activity (project, task, description, starttime, endtime, date) VALUES (?,?,?,?,?,?)', activity)
         conn.commit()
         conn.close()
         activityscreen = ActivityScreen()
@@ -201,15 +209,16 @@ class ActivityScreen(QDialog):
     def showactivity(self):
         conn = sqlite3.connect("test.db")
         queryCurs = conn.cursor()
-        queryCurs.execute('SELECT rowid,starttime,endtime,project,task,tasktitle,tasklink,description FROM activity WHERE date =\''+self.currentdate+"\'") 
+        queryCurs.execute('SELECT rowid,starttime,endtime,project,task,description FROM activity WHERE date =\''+self.currentdate+"\'") 
         self.tableWidget.verticalHeader().setVisible(False)
         self.tableWidget.horizontalHeader().setVisible(False)
         self.tableWidget.setColumnCount(8)
         self.tableWidget.setRowCount(0)
-        self.tableWidget.setColumnWidth(0,80)
-        self.tableWidget.setColumnWidth(1,80)
+        self.tableWidget.setColumnWidth(0,100)
+        self.tableWidget.setColumnWidth(1,100)
         self.tableWidget.setColumnWidth(2,100)
         self.tableWidget.setColumnWidth(4,139)
+        self.tableWidget.setColumnWidth(5,70)
         
         self.productive_hours = []
         self.break_hours = []
@@ -231,7 +240,7 @@ class ActivityScreen(QDialog):
             else:
                 conn = sqlite3.connect("test.db")
                 queryCurs = conn.cursor()
-                queryCurs.execute('SELECT starttime,endtime,project,task,tasktitle,tasklink,description FROM activity WHERE rowid =\''+str(self.row_id)+"\'") 
+                queryCurs.execute('SELECT starttime,endtime,project,task,description FROM activity WHERE rowid =\''+str(self.row_id)+"\'") 
                 for item in queryCurs:
                     total_time=self.time_diffrence(item[0],item[1])
                     if (data[4] == 'Lunch Break' or data[4] == 'Tea Break' or data[4] == 'Other Break'):
@@ -241,7 +250,7 @@ class ActivityScreen(QDialog):
                     self.timer.setText('<h3 style="color:black">' + total_time + '</h3>')
                     self.start = QPushButton('Start')
                     self.start.setStyleSheet("background-color : rgb(97, 179, 255);color: rgb(0, 0, 0);border-radius:20px;")
-                    add_duplicate_activity = partial(self.add_duplicate_Activity,item[2],item[3],item[4],item[5],item[6])
+                    add_duplicate_activity = partial(self.add_duplicate_Activity,item[2],item[3],item[4])
                     self.start.clicked.connect(add_duplicate_activity)
 
             self.edit = QPushButton('Edit')
@@ -281,19 +290,69 @@ class AddActivityScreen(QDialog):
         self.Addtask.addItem("Learn New Technology")
         self.Addtask.addItem("Electricity Failure")
 
+        #reg_ex = QRegExp("^(1[0-2]|0?[1-9]):[0-5][0-9]:[0-5][0-9] [APap][mM]$") 12 hour format
+        reg_ex_for_time = QRegExp("^([01][0-9]|2[0-3]):[0-5][0-9]:[0-5][0-9] [APap][mM]$")
+        reg_ex_for_text = QRegExp("[a-zA-Z]+")
+
+        input_validator = QRegExpValidator(reg_ex_for_time, self.starttimefield)
+        self.starttimefield.setValidator(input_validator)
+
+        input_validator = QRegExpValidator(reg_ex_for_time, self.endtimefield)
+        self.endtimefield.setValidator(input_validator)
+
+        self.Tasktitlefield.setMaxLength(60)
+        input_validator = QRegExpValidator(reg_ex_for_text, self.Tasktitlefield)
+        self.Tasktitlefield.setValidator(input_validator)
+
+        input_validator = QRegExpValidator(reg_ex_for_text, self.Tasklinkfield)
+        self.Tasklinkfield.setValidator(input_validator)
+
+        # regexp = QRegExp(r'^[a-zA-Z]*$')
+        # self.validator = QRegExpValidator(regexp)
+
+        # def validation():
+        #     regexp = QtCore.QRegExp('^([01]?[0-9]?[0-9]|2[0-4][0-9]|25[0-5])$')
+        #     valid=QtGui.QRegExpValidator.validate(regexp)
+        #     if not valid:
+        #         Ui_IPG_weld.Start_i.setPlainText('0')
+
+        # self.Descriptionfield.textChanged.connect(validation)
+
+        # input_validator = QRegExpValidator(reg_ex_for_text, self.Descriptionfield)
+        # self.Descriptionfield.setValidator(input_validator)
 
     def closeactivity(self):
         activityscreen = ActivityScreen()
         widget.addWidget(activityscreen)
         widget.setCurrentIndex(widget.currentIndex()+1)  
 
+    def validate(self,time_text):
+        try:
+            return bool(datetime.datetime.strptime(time_text, "%H:%M:%S %p"))
+        except ValueError:
+            return False
+    
+    def converted_12h_to_24h(self,time):
+        try:
+            converted_time = datetime.datetime.strptime(time, "%I:%M:%S %p")
+            new_time = converted_time.strftime("%H:%M:%S %p")
+            return new_time
+        except ValueError:
+            return time
+
+    def converted_24h_to_12h(self,time):
+        converted_time = datetime.datetime.strptime(time, "%H:%M:%S %p")
+        new_time = converted_time.strftime("%I:%M:%S %p")
+        return new_time
+
     def saveactivitytodb(self):
+       
         activityscreen = ActivityScreen()
         project_name = self.Addproject.currentText()
         task = self.Addtask.currentText()
         task_title = self.Tasktitlefield.text()
         task_link = self.Tasklinkfield.text()
-        description = self.Descriptionfield.text()
+        description = self.Descriptionfield.toPlainText()
         start_time = self.starttimefield.text()
         end_time = self.endtimefield.text()
         date = activityscreen.currentdate
@@ -302,18 +361,106 @@ class AddActivityScreen(QDialog):
         else:
             if project_name == 'Select Project':
                 project = project_name.replace('Select Project', 'Other Things')
-            if start_time == '':
-                start_time = QTime.currentTime().toString()
-            conn = sqlite3.connect("test.db")
-            cur = conn.cursor()
-            activity = [project, task, task_title, task_link, description, start_time, end_time, date]
-            cur.execute('INSERT INTO activity (project, task, tasktitle, tasklink, description, starttime, endtime, date) VALUES (?,?,?,?,?,?,?,?)', activity)
-            conn.commit()
-            conn.close()
-            activityscreen = ActivityScreen()
-            widget.addWidget(activityscreen)
-            widget.setCurrentIndex(widget.currentIndex()+1)
+            else:
+                project = project_name
 
+            if start_time != '' and end_time != '':
+                validate_start_time_format = self.validate(start_time)
+                if not validate_start_time_format:
+                    self.start_time_error.setText("format should be correct.")
+                else:
+                    self.start_time_error.setText("")
+
+                validate_end_time_format = self.validate(end_time)
+                if not validate_end_time_format:
+                    self.end_time_error.setText("format should be correct.")
+                else:
+                    current_time_zone = QTime.currentTime().toString()
+                    converted_current_time = datetime.datetime.strptime(current_time_zone,"%H:%M:%S")
+                    current_time = converted_current_time.strftime("%H:%M:%S %p")
+
+                    start_time_new = self.converted_12h_to_24h(start_time)
+                    end_time_new = self.converted_12h_to_24h(end_time)
+                    previous_current_time = converted_current_time - datetime.timedelta(minutes=5)
+                    prev_curr_time = previous_current_time.strftime("%H:%M:%S %p")
+        
+                    if start_time_new > current_time:
+                        self.start_time_error.setText("not allow future time")
+                    elif start_time_new < prev_curr_time or start_time_new > current_time:
+                        self.start_time_error.setText("not allow previous time")
+
+                    elif end_time_new < start_time_new:
+                        self.end_time_error.setText("should be greater than start time")
+                    elif end_time_new > current_time:
+                        self.end_time_error.setText("not allow future time")
+                    else:
+                        if activityscreen.activity_on:
+                            self.end_time_error.setText("can't be blank")
+                        else:
+                            start_time = self.converted_24h_to_12h(start_time_new)
+                            conn = sqlite3.connect("test.db")
+                            cur = conn.cursor()
+                            activity = [project, task, task_title, task_link, description, start_time, end_time, date]
+                            cur.execute('INSERT INTO activity (project, task, tasktitle, tasklink, description, starttime, endtime, date) VALUES (?,?,?,?,?,?,?,?)', activity)
+                            conn.commit()
+                            conn.close()
+                            activityscreen = ActivityScreen()
+                            widget.addWidget(activityscreen)
+                            widget.setCurrentIndex(widget.currentIndex()+1)
+            
+            elif start_time != '':
+                validate_time_format = self.validate(start_time)
+                if not validate_time_format:
+                    self.start_time_error.setText("..format should be correct")
+                else:
+                    current_time_zone = QTime.currentTime().toString()
+                    converted_current_time = datetime.datetime.strptime(current_time_zone,"%H:%M:%S")
+                    current_time = converted_current_time.strftime("%H:%M:%S %p")
+                    start_time_new = self.converted_12h_to_24h(start_time)
+                    previous_current_time = converted_current_time - datetime.timedelta(minutes=5)
+                    prev_curr_time = previous_current_time.strftime("%H:%M:%S %p")
+
+                    if start_time_new > current_time:
+                        self.start_time_error.setText("not_allow_future_time")
+
+                    elif start_time_new < prev_curr_time or start_time_new > current_time:
+                        self.start_time_error.setText("not allow previous time")
+                    else:
+                        if activityscreen.activity_on:
+                            self.start_time_error.setText("can't be blank")
+                        else:
+                            start_time = self.converted_24h_to_12h(start_time_new)
+                            conn = sqlite3.connect("test.db")
+                            cur = conn.cursor()
+                            activity = [project, task, task_title, task_link, description, start_time, end_time, date]
+                            cur.execute('INSERT INTO activity (project, task, tasktitle, tasklink, description, starttime, endtime, date) VALUES (?,?,?,?,?,?,?,?)', activity)
+                            conn.commit()
+                            conn.close()
+                            activityscreen = ActivityScreen()
+                            widget.addWidget(activityscreen)
+                            widget.setCurrentIndex(widget.currentIndex()+1)
+
+            else:
+                current_time = QTime.currentTime().toString()
+                converted_current_time = datetime.datetime.strptime(current_time,"%H:%M:%S")
+                start_time = converted_current_time.strftime("%I:%M:%S %p")
+
+                if activityscreen.activity_on:
+                    self.end_time_error.setText("Can't be blank")
+                else:
+                    conn = sqlite3.connect("test.db")
+                    cur = conn.cursor()
+                    activity = [project, task, task_title, task_link, description, start_time, end_time, date]
+                    cur.execute('INSERT INTO activity (project, task, tasktitle, tasklink, description, starttime, endtime, date) VALUES (?,?,?,?,?,?,?,?)', activity)
+                    conn.commit()
+                    conn.close()
+                    activityscreen = ActivityScreen()
+                    widget.addWidget(activityscreen)
+                    widget.setCurrentIndex(widget.currentIndex()+1)
+
+                
+            
+            
 class EditActivityScreen(QDialog):
     def __init__(self,row_id):
         super(EditActivityScreen, self).__init__()
@@ -365,7 +512,7 @@ class EditActivityScreen(QDialog):
         task = self.Addtask.currentText()
         task_title = self.Tasktitlefield.text()
         task_link = self.Tasklinkfield.text()
-        description = self.Descriptionfield.text()
+        description = self.Descriptionfield.toPlainText()
 
         conn = sqlite3.connect("test.db")
         cur = conn.cursor()
