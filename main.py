@@ -9,6 +9,7 @@ import sqlite3
 import datetime
 from functools import partial
 import re
+from PyQt5 import QtGui, QtCore
 
 class WelcomeScreen(QDialog):
     def __init__(self):
@@ -60,7 +61,9 @@ class LoginScreen(QDialog):
 class ActivityScreen(QDialog):
     def __init__(self):
         super(ActivityScreen, self).__init__()
-        loadUi("activities.ui",self)
+        loadUi("activities_test.ui",self)
+        self.setMouseTracking(True)
+        
         self.New.clicked.connect(self.gotoaddactivity)
         self.row_id = 0
         self.counter_hour = 0
@@ -98,15 +101,12 @@ class ActivityScreen(QDialog):
         self.break_time = str(break_hours_sum)
         self.breakHours.setText("Break Hours :" + self.break_time)
 
-
     def showCounter(self):
         
             if self.startWatch:
                 self.counter += 1
-
                 cnt = int((self.counter/10 - int(self.counter/10))*10)
                 self.count = '0' + str(cnt)
-                
 
                 if int(self.counter/10) < 10 :
                     self.second = '0' + str(int(self.counter / 10))
@@ -136,10 +136,8 @@ class ActivityScreen(QDialog):
                                 else:
                                     self.hour = str(ho)
 
-      
             text = self.hour + ':' + self.minute + ':' + self.second
-            self.timer.setText('<h3 style="color:black">' + text + '</h3>')
-        
+            self.timer.setText('<h3 style="color:black">' + text + '</h3>')      
     
     def Start_new(self):
         self.activity_on = True
@@ -207,18 +205,21 @@ class ActivityScreen(QDialog):
         
 
     def showactivity(self):
+        
         conn = sqlite3.connect("test.db")
         queryCurs = conn.cursor()
         queryCurs.execute('SELECT rowid,starttime,endtime,project,task,description FROM activity WHERE date =\''+self.currentdate+"\'") 
-        self.tableWidget.verticalHeader().setVisible(False)
-        self.tableWidget.horizontalHeader().setVisible(False)
-        self.tableWidget.setColumnCount(8)
-        self.tableWidget.setRowCount(0)
-        self.tableWidget.setColumnWidth(0,100)
-        self.tableWidget.setColumnWidth(1,100)
-        self.tableWidget.setColumnWidth(2,100)
-        self.tableWidget.setColumnWidth(4,139)
-        self.tableWidget.setColumnWidth(5,70)
+       
+        
+        # self.tableWidget.verticalHeader().setVisible(False)
+        # self.tableWidget.horizontalHeader().setVisible(False)
+        # self.tableWidget.setColumnCount(8)
+        # self.tableWidget.setRowCount(0)
+        # self.tableWidget.setColumnWidth(0,100)
+        # self.tableWidget.setColumnWidth(1,100)
+        # self.tableWidget.setColumnWidth(2,100)
+        # self.tableWidget.setColumnWidth(4,139)
+        # self.tableWidget.setColumnWidth(5,70)
         
         self.productive_hours = []
         self.break_hours = []
@@ -226,7 +227,7 @@ class ActivityScreen(QDialog):
         for row, data in enumerate(queryCurs):
             self.timer = QLabel()
             self.row_id = data[0]
-            self.tableWidget.insertRow(row)
+            #self.tableWidget.insertRow(row)
             
             if data[2] == '':
                 timer = QTimer(self)
@@ -256,12 +257,15 @@ class ActivityScreen(QDialog):
             self.edit = QPushButton('Edit')
             edit_id = partial(self.Edit,self.row_id)
             self.edit.clicked.connect(edit_id)
-            self.tableWidget.setCellWidget(row,5, self.timer)
-            self.tableWidget.setCellWidget(row,6, self.start)
-            self.tableWidget.setCellWidget(row,7, self.edit)
+            self.gridLayout.addWidget(self.timer, row,5)
+            self.gridLayout.addWidget( self.start, row,6)
+            self.gridLayout.addWidget(self.edit, row,7)
             
             for column, item in enumerate(data[1:]):  
-                self.tableWidget.setItem(row, column, QTableWidgetItem(str(item))) 
+                label = QLabel(str(item))
+                self.gridLayout.addWidget(label,row,column)
+                
+        
         
 
 class AddActivityScreen(QDialog):
