@@ -61,7 +61,7 @@ class LoginScreen(QDialog):
 class ActivityScreen(QDialog):
     def __init__(self):
         super(ActivityScreen, self).__init__()
-        loadUi("activities_test.ui",self)
+        loadUi("activities_test_hashiket.ui",self)
         self.setMouseTracking(True)
         
         self.New.clicked.connect(self.gotoaddactivity)
